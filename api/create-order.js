@@ -1,7 +1,7 @@
 const Razorpay = require("razorpay");
 const admin = require("firebase-admin");
 
-// Firebase Init (one time)
+// Firebase Init
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -34,9 +34,8 @@ module.exports = async (req, res) => {
   try {
     const { amount, credits, packageId, userId } = req.body;
 
-    // Validate
     if (!amount || !credits || !userId) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json({ error: "Missing fields" });
     }
 
     // Create Razorpay Order
@@ -62,8 +61,6 @@ module.exports = async (req, res) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    console.log("✅ Order created:", order.id);
-
     return res.status(200).json({
       success: true,
       orderId: order.id,
@@ -71,7 +68,7 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("Error:", error);
     return res.status(500).json({ error: "Order creation failed" });
   }
 };

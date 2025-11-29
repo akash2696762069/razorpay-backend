@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -49,7 +49,6 @@ module.exports = async (req, res) => {
 
     const orderData = orderDoc.data();
 
-    // Already processed
     if (orderData.status === "completed") {
       return res.status(200).json({
         success: true,
@@ -64,20 +63,17 @@ module.exports = async (req, res) => {
       const userDoc = await transaction.get(userRef);
       const currentCredits = userDoc.data()?.totalCredits || 0;
 
-      // Add credits
       transaction.update(userRef, {
         totalCredits: currentCredits + orderData.credits,
         lastPurchaseDate: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // Update order
       transaction.update(orderDoc.ref, {
         status: "completed",
         paymentId: paymentId,
         completedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // Transaction record
       const txnRef = admin.firestore().collection("transactions").doc();
       transaction.set(txnRef, {
         uid: userId,
@@ -91,8 +87,6 @@ module.exports = async (req, res) => {
       });
     });
 
-    console.log("✅ Payment verified, credits:", orderData.credits);
-
     return res.status(200).json({
       success: true,
       credits: orderData.credits,
@@ -100,7 +94,7 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("Error:", error);
     return res.status(500).json({ error: "Verification failed" });
   }
 };
