@@ -1,0 +1,8 @@
+{
+  "name": "razorpay-backend",
+  "version": "1.0.0",
+  "dependencies": {
+    "razorpay": "^2.9.2",
+    "firebase-admin": "^11.11.0"
+  }
+}
